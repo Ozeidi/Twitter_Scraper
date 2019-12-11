@@ -387,8 +387,8 @@ if __name__ == '__main__':
     # no gui
     if useGUI == False:
 
-        username = 'omazei@hotmail.com '
-        password = 'WadiFida.net'
+        username = 'consulting@intelligentdc.co'
+        password = 'Omsasaf1.'
         language = 'EN'
         position = ''
         location = 'Oman'
