@@ -139,7 +139,7 @@ class EasyApplyBot:
                 #position_number = str(count_job + jobs_per_page)
                 position_number = str(count_application)
                 print(f"\nPosition {position_number}:\n {self.browser.title} \n") # {string_easy} \n")
-                print(job,'\n')
+                print(job,'Omar \n')
 
                 now = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
                 temp ['timestamp'] = str(now)
@@ -266,7 +266,10 @@ class EasyApplyBot:
                 data = temp
                 with open('output.csv', 'a', newline='') as f:
                     try:
+
                         writer = csv.writer(f)
+                        if count_application ==1:
+                            writer.writerow(data.keys())
                         writer.writerow(data.values())
                         print('Job added to output.csv')
                     except:
@@ -387,8 +390,8 @@ if __name__ == '__main__':
     # no gui
     if useGUI == False:
 
-        username = 'consulting@intelligentdc.co'
-        password = 'Omsasaf1.'
+        username = 'consulting@intelligentdc.co' #'omazei@hotmail.com'#
+        password = 'Omsasaf1.' #'WadiFida.net'#
         language = 'EN'
         position = ''
         location = 'Oman'

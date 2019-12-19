@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "/home/ozeidi/00.coding/workforce-demand-spider/spider/bin/python3.7",
+    "python.pythonPath": "/home/ozeidi/anaconda3/bin/python",
     "python.linting.pylintEnabled": false,
     "python.linting.mypyEnabled": true,
     "python.linting.enabled": true
