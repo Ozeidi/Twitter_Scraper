@@ -19,7 +19,9 @@ import datetime
 import login
 
 # pyinstaller --onefile --icon=app.ico scrapejobs.py
-
+#Chrome Paths on Heroku
+GOOGLE_CHROME_PATH = '/app/.apt/usr/bin/google_chrome'
+CHROMEDRIVER_PATH = '/app/.chromedriver/bin/chromedriver'
 class EasyApplyBot:
 
     MAX_APPLICATIONS = 3000
@@ -30,7 +32,9 @@ class EasyApplyBot:
 
         self.language = language
         self.options = self.browser_options()
-        self.browser = webdriver.Chrome(chrome_options=self.options, executable_path = dirpath + "/chromedriver")
+        #self.browser = webdriver.Chrome(chrome_options=self.options, executable_path = dirpath + "/chromedriver")
+        #Heroku
+        self.browser = webdriver.Chrome(chrome_options=self.options, executable_path = CHROMEDRIVER_PATH)
         self.start_linkedin(username,password)
 
 
@@ -44,6 +48,10 @@ class EasyApplyBot:
         #options.add_argument('--disable-gpu')
         #options.add_argument('disable-infobars')
         options.add_argument("--disable-extensions")
+
+        # Herok Options
+        options.add_argument('--disable-gpu')
+        options.binary_location = GOOGLE_CHROME_PATH 
         return options
 
     def start_linkedin(self,username,password):
