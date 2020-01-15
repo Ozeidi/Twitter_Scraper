@@ -18,7 +18,7 @@ import requests
 import csv
 import datetime
 
-import login
+#import login
 ## Database 
 import psycopg2
 import pymysql
