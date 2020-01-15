@@ -8,8 +8,8 @@ from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
 #import pyautogui
 
-from tkinter import filedialog, Tk
-import tkinter.messagebox as tm
+#from tkinter import filedialog, Tk
+#import tkinter.messagebox as tm
 import os
 from urllib.request import urlopen
 import pandas as pd
@@ -345,7 +345,7 @@ class LinkedInSpider:
                     print('\n\n****************************************\n\n')
                     print('Going to next jobs page, YEAAAHHH!!')
                     print('\n\n****************************************\n\n')
-                    self.avoid_lock()
+                    #self.avoid_lock()
                     self.browser, jobs_per_page = self.next_jobs_page(jobs_per_page)
 
 
