@@ -1,3 +1,4 @@
+import json 
 import time
 import random
 from selenium import webdriver
@@ -6,6 +7,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
 import pyautogui
+
 from tkinter import filedialog, Tk
 import tkinter.messagebox as tm
 import os
@@ -17,24 +19,50 @@ import csv
 import datetime
 
 import login
+## Database 
+import psycopg2
+import pymysql
+import subprocess
+
+Auth =None
+with open('Auth.json') as json_file:
+    Auth = json.load(json_file)
 
 # pyinstaller --onefile --icon=app.ico scrapejobs.py
 #Chrome Paths on Heroku
-GOOGLE_CHROME_PATH = '/app/.apt/usr/bin/google_chrome'
-CHROMEDRIVER_PATH = '/app/.chromedriver/bin/chromedriver'
-class EasyApplyBot:
+#GOOGLE_CHROME_PATH = '/app/.apt/usr/bin/google_chrome'
+#CHROMEDRIVER_PATH = '/app/.chromedriver/bin/chromedriver'
+if os.environ['APP_SETTINGS'] == 'PROD':
+    from Settings.prod import *
+elif os.environ['APP_SETTINGS'] == "DEV":
+    from Settings.dev import * 
+pyautogui.FAILSAFE= False
+class LinkedInSpider:
 
-    MAX_APPLICATIONS = 3000
+    MAX_APPLICATIONS =3000
 
     def __init__(self,username,password, language, position, location): #, resumeloctn):
-
-        dirpath = os.getcwd()
+        #heroku Datbase
+        #self.conn = conn = psycopg2.connect("host=ec2-174-129-254-217.compute-1.amazonaws.com dbname=daj9b3ubq7bp3s user=kcuqkrlonouqek port=5432 password=69e1ad83317e3b92bb5145bd01c9abff9191fadb0b2e2d8a461ba83b32c3be14")
+        #local Database for testing
+        #psycopg2.connect("host=localhost dbname=linkedin user=ozeidi password=WadiFida.net1")
+        #####################
+        #Cloud SQL on Google
+        # Initiate Proxy Connection Required by Google for Database Connection
+        start_proxy = './cloud_sql_proxy -instances=pi-counter-263618:us-central1:pi-counter=tcp:3355 \
+              -credential_file=pi-counter-263618-f7ca42a074df.json &'
+        subprocess.call([start_proxy], shell=True)
+        # Start the connection through the proxy tunnle
+        self.conn = pymysql.connect(host='127.0.0.1',
+                             port = 3355,
+                             user=Auth["google"]["user"],
+                             password=Auth["google"]["pass"],
+                             db='Workforce')
+        self.cur = self.conn.cursor()
 
         self.language = language
         self.options = self.browser_options()
-        #self.browser = webdriver.Chrome(chrome_options=self.options, executable_path = dirpath + "/chromedriver")
-        #Heroku
-        self.browser = webdriver.Chrome(chrome_options=self.options, executable_path = CHROMEDRIVER_PATH)
+        self.browser = webdriver.Chrome(chrome_options=self.options, executable_path =CHROMEDRIVER_PATH)
         self.start_linkedin(username,password)
 
 
@@ -50,8 +78,8 @@ class EasyApplyBot:
         options.add_argument("--disable-extensions")
 
         # Herok Options
-        options.add_argument('--disable-gpu')
-        options.binary_location = GOOGLE_CHROME_PATH 
+        #options.add_argument('--disable-gpu')
+        #options.binary_location = GOOGLE_CHROME_PATH 
         return options
 
     def start_linkedin(self,username,password):
@@ -97,7 +125,7 @@ class EasyApplyBot:
         self.location = "&location=" + location
 
 
-    def start_apply(self):
+    def start_scraping(self):
         self.fill_data()
         self.applications_loop()
 
@@ -129,11 +157,12 @@ class EasyApplyBot:
             # sleep to make sure everything loads, add random to make us look human.
             time.sleep(random.uniform(3.5, 6.9))
             # this to load all the jobs in the reactive pan
-            self.load_page(sleep=1)
+            #self.browser.execute_script('document.getElementById("ember218").scrollIntoView();')
+            
             page = BeautifulSoup(self.browser.page_source, 'lxml')
 
             jobs = self.get_job_links(page)
-
+            print( "########### NUMBER OF JOBS: {}".format(len(jobs)))
             if not jobs:
                 print("Jobs not found")
                 break
@@ -168,7 +197,11 @@ class EasyApplyBot:
                     #     ).click()
                     #self.load_page(sleep=1)
                 except:
-                    print('******* Job not valid *******\n')
+                    try:
+                        self.browser.find_element_by_xpath('//*[@id="ember40"]').click()
+                    except:
+
+                        print('******* Job not valid *******\n')
 
 
 
@@ -202,27 +235,27 @@ class EasyApplyBot:
                 
                 # post date
                 try:
-                    temp['post date'] = self.browser.find_element_by_xpath(
+                    temp['post_date'] = self.browser.find_element_by_xpath(
                         '//span[contains(text(),"Posted Date")]/following::span'
                         ).text.strip()
                 except:
-                    temp['post date'] = None  
+                    temp['post_date'] = None  
                 
                 # no. of applicants
                 try:
-                    temp['no. applicants']  = self.browser.find_element_by_xpath(
+                    temp['no_applicants']  = self.browser.find_element_by_xpath(
                         '//span[contains(text(),"Number of applicants")]/following::span'
                         ).text.strip()
                 except:
-                    temp['no. applicants'] = None  
+                    temp['no_applicants'] = None  
 
                 # job details
                 try:
-                    temp['job description'] = self.browser.find_element_by_xpath(
+                    temp['job_description'] = self.browser.find_element_by_xpath(
                         '//div[@id="job-details"]'
                         ).text.strip().replace('\n', ', ')
                 except:
-                    temp['job description'] = None  
+                    temp['job_description'] = None  
                 
                 # seniority level
                 try:
@@ -242,11 +275,11 @@ class EasyApplyBot:
                 
                 # Employment Type
                 try:
-                    temp['employment type'] = self.browser.find_element_by_xpath(
+                    temp['employment_type'] = self.browser.find_element_by_xpath(
                         '//h3[contains(text(),"Employment Type")]/following::*'
                         ).text.strip()
                 except:
-                    temp['employment type'] = None  
+                    temp['employment_type'] = None  
                 
                 #Job Functions
                 try:
@@ -258,11 +291,11 @@ class EasyApplyBot:
 
                 # company description
                 try:
-                    temp['company description'] = self.browser.find_element_by_id(
+                    temp['company_description'] = self.browser.find_element_by_id(
                         'company-description-text'
                         ).text.strip()
                 except:
-                    temp['company description'] = None
+                    temp['company_description'] = None
 
 
 
@@ -280,9 +313,16 @@ class EasyApplyBot:
                             writer.writerow(data.keys())
                         writer.writerow(data.values())
                         print('Job added to output.csv')
+                        
+
                     except:
                         print('*** Ooopss, NOT able to write job to output, sorry :(')
 
+                    try:
+                        self.do_insert(data)
+                    except Exception as e:
+                        print('*** Ooopss, NOT able to write to Database:(')
+                        print(str(e))
                 
 
 
@@ -292,7 +332,7 @@ class EasyApplyBot:
                 count_application = count_application + 1
 
                 if count_application % 200 == 0:
-                    sleepTime = random.randint(590, 900)
+                    sleepTime = random.randint(1,3)#(590, 900)
                     print('\n\n****************************************\n\n')
                     print('Time for a nap - see you in ', sleepTime/60, ' min')
                     print('\n\n****************************************\n\n')
@@ -300,7 +340,7 @@ class EasyApplyBot:
                 # that &start= parameter in the url http request refers to the page, where each page has 25 job postings
                 #  25 means page 1, 50 page and so on
                 if count_job == len(jobs):
-                    jobs_per_page = jobs_per_page + 25
+                    jobs_per_page = jobs_per_page + 10
                     count_job = 0
                     print('\n\n****************************************\n\n')
                     print('Going to next jobs page, YEAAAHHH!!')
@@ -322,7 +362,7 @@ class EasyApplyBot:
         return set(links)
 
     def get_job_page(self, job):
-        root = 'www.linkedin.com'
+        root = 'linkedin.com'
         if root not in job:
             job = 'https://www.linkedin.com'+job
         self.browser.get(job)
@@ -354,11 +394,16 @@ class EasyApplyBot:
         time.sleep(1)
 
     def load_page(self, sleep=1):
+        #MOVE TO PANE
+        # pyautogui.moveTo(500, 500, duration=1.0)
+        # x, _ = pyautogui.position()
+        # pyautogui.moveTo(x+200, None, duration=1.0)
+        # pyautogui.moveTo(x, None, duration=0.5)
         scroll_page = 4000
         while scroll_page < 4000:
             self.browser.execute_script("window.scrollTo(0,"+str(scroll_page)+" );")
             scroll_page += 200
-            time.sleep(sleep)
+            time.sleep(0.5)
 
         if sleep != 1:
             self.browser.execute_script("window.scrollTo(0,0);")
@@ -379,8 +424,11 @@ class EasyApplyBot:
 
     def next_jobs_page(self, jobs_per_page):
         self.browser.get(
-            #"https://www.linkedin.com/jobs/search/?f_LF=f_AL&keywords=" +
+            #"https://www.linkedin.com/jobs/search/?f_LF=f_AL&keywords=" +86400
+            # Jobs posted in the Last 7 Days
             "https://www.linkedin.com/jobs/search/?f_TPR=r604800&keywords=" +
+            #Jobs Posted in the last 24 hours 
+            #"https://www.linkedin.com/jobs/search/?f_TPR=r86400&keywords=" +
             self.position + self.location + "&start="+str(jobs_per_page)+"&sortBy=DD")
         self.avoid_lock()
         self.load_page()
@@ -389,7 +437,14 @@ class EasyApplyBot:
     def finish_apply(self):
         self.browser.close()
 
-
+    def do_insert(self, rec: dict):
+        cols = rec.keys()
+        cols_str = ','.join(cols)
+        vals = [ rec[k] for k in cols ]
+        vals_str = ','.join( ['%s' for i in range(len(vals))] ) 
+        sql_str = """INSERT INTO Workforce ({}) VALUES ({})""".format(cols_str, vals_str)
+        self.cur.execute(sql_str, vals)
+        self.conn.commit()
 if __name__ == '__main__':
 
     # set use of gui (T/F)
@@ -398,8 +453,8 @@ if __name__ == '__main__':
     # no gui
     if useGUI == False:
 
-        username = 'consulting@intelligentdc.co' #'omazei@hotmail.com'#
-        password = 'Omsasaf1.' #'WadiFida.net'#
+        username = Auth["linkedin"]["user"]#'consulting@intelligentdc.co' #'omazei@hotmail.com'#
+        password = Auth["linkedin"]["pass"] #'WadiFida.net'#
         language = 'EN'
         position = ''
         location = 'Oman'
@@ -416,5 +471,5 @@ if __name__ == '__main__':
     print("\nLet's scrape some jobs!\n")
     
     # start bot
-    bot = EasyApplyBot(username,password, language, position, location) #, resumeloctn)
-    bot.start_apply()
+    spider = LinkedInSpider(username,password, language, position, location) #, resumeloctn)
+    spider.start_scraping()
