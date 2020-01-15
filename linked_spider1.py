@@ -175,7 +175,7 @@ class LinkedInSpider:
 
                 #position_number = str(count_job + jobs_per_page)
                 position_number = str(count_application)
-                print(f"\nPosition {position_number}:\n {self.browser.title} \n") # {string_easy} \n")
+                print("\nPosition {0}:\n {1} \n".format(position_number,self.browser.title)) # {string_easy} \n")
                 print(job,'Omar \n')
 
                 now = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
