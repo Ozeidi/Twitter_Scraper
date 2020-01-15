@@ -36,7 +36,7 @@ if os.environ['APP_SETTINGS'] == 'PROD':
     from Settings.prod import *
 elif os.environ['APP_SETTINGS'] == "DEV":
     from Settings.dev import * 
-pyautogui.FAILSAFE= False
+#pyautogui.FAILSAFE= False
 class LinkedInSpider:
 
     MAX_APPLICATIONS =3000
@@ -102,7 +102,7 @@ class LinkedInSpider:
         if language == "en":
              title = "Sign In to LinkedIn"
         elif language == "es":
-             title = "Inicia sesión"
+             title = "Inicia sesion"
         elif language == "pt":
              title = "Entrar no LinkedIn"
 
@@ -430,7 +430,7 @@ class LinkedInSpider:
             #Jobs Posted in the last 24 hours 
             #"https://www.linkedin.com/jobs/search/?f_TPR=r86400&keywords=" +
             self.position + self.location + "&start="+str(jobs_per_page)+"&sortBy=DD")
-        self.avoid_lock()
+        #self.avoid_lock()
         self.load_page()
         return (self.browser, jobs_per_page)
 
