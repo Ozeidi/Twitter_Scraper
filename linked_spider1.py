@@ -53,7 +53,7 @@ class LinkedInSpider:
               -credential_file=pi-counter-263618-f7ca42a074df.json &'
         subprocess.call([start_proxy], shell=True)
         # Start the connection through the proxy tunnle
-        self.conn = pymysql.connect(host='127.0.0.1',
+        self.conn = pymysql.connect(host='localhost',
                              port = 3355,
                              user=Auth["google"]["user"],
                              password=Auth["google"]["pass"],
