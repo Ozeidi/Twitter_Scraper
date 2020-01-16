@@ -51,7 +51,7 @@ class LinkedInSpider:
         # Initiate Proxy Connection Required by Google for Database Connection
         start_proxy = './cloud_sql_proxy -instances=pi-counter-263618:us-central1:pi-counter=tcp:3355 \
               -credential_file=pi-counter-263618-f7ca42a074df.json &'
-        subprocess.call([start_proxy], shell=True)
+        #subprocess.call([start_proxy], shell=True)
         # Start the connection through the proxy tunnle
         self.conn = pymysql.connect(host='localhost',
                              port = 3355,
