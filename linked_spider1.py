@@ -42,22 +42,22 @@ class LinkedInSpider:
     MAX_APPLICATIONS =3000
 
     def __init__(self,username,password, language, position, location): #, resumeloctn):
-        #heroku Datbase
-        #self.conn = conn = psycopg2.connect("host=ec2-174-129-254-217.compute-1.amazonaws.com dbname=daj9b3ubq7bp3s user=kcuqkrlonouqek port=5432 password=69e1ad83317e3b92bb5145bd01c9abff9191fadb0b2e2d8a461ba83b32c3be14")
-        #local Database for testing
-        #psycopg2.connect("host=localhost dbname=linkedin user=ozeidi password=WadiFida.net1")
-        #####################
+        port=3356
         #Cloud SQL on Google
         # Initiate Proxy Connection Required by Google for Database Connection
-        start_proxy = './cloud_sql_proxy -instances=pi-counter-263618:us-central1:pi-counter=tcp:3355 \
-              -credential_file=pi-counter-263618-f7ca42a074df.json &'
-        #subprocess.call([start_proxy], shell=True)
+        start_proxy = './cloud_sql_proxy -instances=pi-counter-263618:us-central1:pi-counter=tcp:{0} \
+              -credential_file=pi-counter-263618-f7ca42a074df.json &'.format(port)
+        subprocess.call([start_proxy], shell=True)
         # Start the connection through the proxy tunnle
         self.conn = pymysql.connect(host='localhost',
-                             port = 3355,
+                             port = port,
                              user=Auth["google"]["user"],
                              password=Auth["google"]["pass"],
                              db='Workforce')
+        #self.conn = psycopg2.connect("host=localhost dbname=Workforce user={0} password={1}".format(Auth["google"]["user"],Auth["google"]["pass"]))
+
+        # self.conn = psycopg2.connect(host="localhost",port =3355, dbname="Workforce", user=Auth["google"]["user"], password=Auth["google"]["user"])
+
         self.cur = self.conn.cursor()
 
         self.language = language
@@ -86,6 +86,7 @@ class LinkedInSpider:
         print("\nLogging in.....\n \nPlease wait :) \n ")
         self.browser.get("https://www.linkedin.com/")
         try:
+            time.sleep(3)
             user_field = self.browser.find_element_by_name("session_key")
             pw_field = self.browser.find_element_by_name("session_password")
             login_button = self.browser.find_element_by_class_name("sign-in-form__submit-btn") 
