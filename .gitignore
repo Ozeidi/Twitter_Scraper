@@ -1,3 +1,7 @@
-spider/
-__pycache__/
-.vscode/
+/**
+!/**/
+!Readme.md
+!Twitter_Scrapper.py
+!test.py
+!chromedriver.exe
+!requirements.txt
