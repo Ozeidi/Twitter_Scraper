@@ -25,7 +25,7 @@ This code base should enable you to collect data from twitter without need for a
 1. Clone this repo to your machine.
 
 ```sh
-$ git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY
+$ git clone https://github.com/Ozeidi/Twitter_Scraper.git
 ```
 2. OPTIONAL: Create vrtual environemnt to avoid messing your python main environment:
 ```sh
