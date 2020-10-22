@@ -142,7 +142,7 @@ class TwitterSpider:
         while True:
             self.browser.get(link)
             # Wait to load the page.
-            time.sleep(1) 
+            time.sleep(self.wait_duration) 
             page = BeautifulSoup(self.browser.page_source, 'lxml')
             temp = [txt.get_text().strip() for txt in page.select('div[data-testid*="tweet"]')]
             print(temp)
@@ -170,7 +170,7 @@ class TwitterSpider:
             self.browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
             # Wait to load the page.
-            time.sleep(1)
+            time.sleep(self.wait_duration)
             page = BeautifulSoup(self.browser.page_source, 'lxml')
             # Calculate new scroll height and compare with last scroll height.
             new_height = self.browser.execute_script("return document.body.scrollHeight")
