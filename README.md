@@ -9,7 +9,7 @@
 - [Background](#background)
 - [Install](#install)
 - [Usage](#usage)
-
+- [Resources](#Resources)
 - [License](#license)
 
 ## Background
@@ -84,7 +84,9 @@ Import the Twitter_Scrapper module in your project and pass to it the handel of 
 	]
 	```
 
-
+##  Resources
+- https://www.vicinitas.io/ :
+    An excellent website that gives you thorough analysis of a twitter account, Hashtage and Followers.
 ## License
 
 [MIT](LICENSE) © Omar Al Zeidi
