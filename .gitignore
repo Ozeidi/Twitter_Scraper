@@ -1,9 +1,10 @@
 /**
 !/**/
-!/output/**
+/output/**
 !Readme.md
 !Twitter_Scrapper.py
 !test.py
-!chromedriver.exe
+chromedriver.exe
 !requirements.txt
 ScrapNotebook.ipynb
+/Twitter

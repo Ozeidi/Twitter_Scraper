@@ -1,6 +1,7 @@
 
 import itertools
 import json 
+import re
 import time
 import random
 from selenium import webdriver
@@ -47,7 +48,7 @@ class TwitterSpider:
         self.options = self.browser_options()
         self.browser = webdriver.Chrome(chrome_options=self.options, executable_path =CHROMEDRIVER_PATH)
         self.user= user
-        self.wait_duration = 2
+        self.wait_duration = 4
 
     def browser_options(self):
         options = Options()
@@ -64,13 +65,7 @@ class TwitterSpider:
     def ScrapProfile(self):
         self.browser.get("https://twitter.com/{0}".format(self.user))
 
-        # while ScrollPage < self.MAX_TWITS:
-        #      # sleep to make sure everything loads, add random to make us look human.
-        #     time.sleep(random.uniform(1, 1))
-        #     ScrollPage +=5000
-        #     self.browser.execute_script("window.scrollTo(0,"+str(ScrollPage)+" );")
-        # this to load all the jobs in the reactive pan
-        #self.browser.execute_script('document.getElementById("ember218").scrollIntoView();')
+
         # Get scroll height.
         last_height = self.browser.execute_script("return document.body.scrollHeight")
         tweets_full_list = []
@@ -81,21 +76,24 @@ class TwitterSpider:
             self.browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
             # Wait to load the page.
-            time.sleep(2)
+            time.sleep(self.wait_duration )
             page = BeautifulSoup(self.browser.page_source, 'lxml')
             articles = page.select('article[role*="article"]')
             
             for article in articles:
                 cnt +=1
-                tweet ={}
-                tweet['ID'] = (article.select('a[href*="/status/"]')[0]["href"])
-                tweet['tweet'] = (article.text)
-                tweet['timestamp'] = (article.select('time')[0]["datetime"])
-                tweet['replies'] = (article.select('div[data-testid*="reply"]')[0]["aria-label"])
-                tweet['retweet'] = (article.select('div[data-testid*="retweet"]')[0]["aria-label"])
-                tweet['likes'] = (article.select('div[data-testid*="like"]')[0]["aria-label"])
-                print("{0} Tweet collected!".format(cnt))
-                tweets.append(tweet)
+                try:
+                    tweet ={}
+                    tweet['ID'] = (article.select('a[href*="/status/"]')[0]["href"])
+                    tweet['tweet'] = (article.text)
+                    tweet['timestamp'] = (article.select('time')[0]["datetime"])
+                    tweet['replies'] = int(re.search('[0-9]+',(article.select('div[data-testid*="reply"]')[0]["aria-label"])).group())
+                    tweet['retweet'] = int(re.search('[0-9]+',(article.select('div[data-testid*="retweet"]')[0]["aria-label"])).group())
+                    tweet['likes'] = int(re.search('[0-9]+',(article.select('div[data-testid*="like"]')[0]["aria-label"])).group())
+                    print("{0} Tweet collected!".format(cnt))
+                    tweets.append(tweet)
+                except:
+                    print("{0} Tweet not available!".format(cnt))
             
             tweets_full_list.extend(tweets)
             #self.WriteJSON("Tweets_agg.json", tweets)
@@ -108,7 +106,7 @@ class TwitterSpider:
 
             last_height = new_height
             
-            # if cnt >3:
+            # if cnt >5:
             #     break
         self.WriteJSON("output/{0}_Tweets.json".format(self.user),tweets_full_list ) #list(itertools.chain(*tweets_full_list))
         #print (tweets)
@@ -121,70 +119,75 @@ class TwitterSpider:
             data = json.load(f)
             for tweet in data:
                 id_ = tweet["ID"]
-                if  "0 Replies" not in tweet["replies"]:
+                if   tweet["replies"] != 0:
                     result = self.HarvestReplies(id_)
                     
-                    print("{0}Replies Collected!".format(cnt))
+                    print(f"Replies Collected for tweet Number {cnt}, ID: {id_} ")
                     #print(result)
-                    replies_full_list.append(result)
+                    replies_full_list.extend(result)
                 cnt+=1
                 # if cnt >4:
                 #     break
         #print(replies_full_list)
         self.WriteJSON("output/{0}_Replies.json".format(self.user), replies_full_list)
 
+
     def HarvestReplies(self, id):
+        self.browser.get(f"https://twitter.com/{id}")
 
-        tweet = []
-        tweet_timestamp = ""
-        replies = []
-        link = "https://twitter.com{0}".format(id)
-        while True:
-            self.browser.get(link)
-            # Wait to load the page.
-            time.sleep(self.wait_duration) 
-            page = BeautifulSoup(self.browser.page_source, 'lxml')
-            temp = [txt.get_text().strip() for txt in page.select('div[data-testid*="tweet"]')]
-            print(temp)
-            if len(temp)!=0:
-                break
-            else:
-                print("Reached Rate limit!")
-                self.browser.close()
-                self.browser = self.browser = webdriver.Chrome(chrome_options=self.options, executable_path =CHROMEDRIVER_PATH)
-
+        # Get scroll height.
         last_height = self.browser.execute_script("return document.body.scrollHeight")
-
-
-
-        #Interactions
-        # likes = [txt.get_text().strip() for txt in page.select('a[href*="/likes"]')]
-        # retweet = [txt.get_text().strip() for txt in page.select('a[href*="/retweet"]')]
-        # qoute = [txt.get_text().strip() for txt in page.select('a[href*="/with_comment"]')]
-        #------
-        #REPLIES
+        tweets_full_list = []
+        cnt=0
         while True:
-
-            temp = [txt.get_text().strip() for txt in page.select('div[data-testid*="tweet"]')]
-            replies.append([x for x in temp if x !="" and x != 'PDO | شركة تنمية نفط عمان@PDO_OM'])
+            tweets=[]
+            # Scroll down to the bottom.
             self.browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
             # Wait to load the page.
-            time.sleep(self.wait_duration)
+            time.sleep(self.wait_duration )
             page = BeautifulSoup(self.browser.page_source, 'lxml')
+            articles = page.select('article[role*="article"]')
+            
+            for article in articles:
+                cnt +=1
+                try:
+                    tweet ={}
+                    tweet['Parent ID'] = id
+                    tweet['ID'] = (article.select('a[href*="/status/"]')[0]["href"])
+                    tweet['tweet'] = (article.text)
+                    tweet['timestamp'] = (article.select('time')[0]["datetime"])
+                    tweet['replies'] = int(re.search('[0-9]+',(article.select('div[data-testid*="reply"]')[0]["aria-label"])).group())
+                    tweet['retweet'] = int(re.search('[0-9]+',(article.select('div[data-testid*="retweet"]')[0]["aria-label"])).group())
+                    tweet['likes'] = int(re.search('[0-9]+',(article.select('div[data-testid*="like"]')[0]["aria-label"])).group())
+                    #
+                    tweets.append(tweet)
+                except:
+                    print("{0} Tweet not available!".format(cnt))
+            print(f"{cnt} Replies collected!")
+            tweets_full_list.extend(tweets)
+            #self.WriteJSON("Tweets_agg.json", tweets)
             # Calculate new scroll height and compare with last scroll height.
             new_height = self.browser.execute_script("return document.body.scrollHeight")
 
             if new_height == last_height:
-
-                break
+                try:
+                    ele = spider.browser.find_element_by_xpath("//span[contains(text(),'Show more replies')]")
+                    
+                    ele.click()
+                except:
+                    try:
+                        ele = spider.browser.find_element_by_xpath("//span[text()='Show']")
+                        ele.click()
+                    except:
+                        break
 
             last_height = new_height
-        temp = list(uniq(replies))
-        # data = {"ID":link,  "likes":likes, "retweet":retweet, "qoute": qoute, "replies" : temp }
-        data = {"ID":link,  "replies" : temp }
-        #print(data)
-        return data
+            
+            # if cnt >5:
+            #     break
+        #self.WriteJSON("output/{0}_Tweets.json".format(self.user),tweets_full_list ) #list(itertools.chain(*tweets_full_list))
+        return tweets_full_list
 
     def ScrollDown(self):
         """A method for scrolling the page."""
@@ -198,7 +201,7 @@ class TwitterSpider:
             self.browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
             # Wait to load the page.
-            time.sleep(2)
+            time.sleep(self.wait_duration -1 )
 
             # Calculate new scroll height and compare with last scroll height.
             new_height = self.browser.execute_script("return document.body.scrollHeight")
